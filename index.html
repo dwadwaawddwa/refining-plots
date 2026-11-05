@@ -1,0 +1,528 @@
+<title>Plot Raffinage Albion</title>
+<meta name="description" content="Calculateur de profit pour stations de raffinage sur plots de ville — Albion Online">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f3efe6; --surface:#fffdf7; --surface-2:#f7f2e8; --elevated:#fffefb;
+  --ink:#24221d; --muted:#6f695c; --faint:#938c7d;
+  --line:#e2dac9; --line-strong:#d2c8b2;
+  --gold:#9a6a12; --gold-bright:#b07d18; --gold-wash:#f6ecd4;
+  --good:#2f7d52; --good-wash:#e4f0e6; --bad:#b2452b; --bad-wash:#f6e3da;
+  --shadow:0 1px 2px rgba(60,48,24,.06),0 8px 24px rgba(60,48,24,.05);
+  --shadow-lift:0 2px 4px rgba(60,48,24,.08),0 16px 40px rgba(60,48,24,.10);
+  --r:14px; --r-sm:9px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161b; --surface:#1b1e25; --surface-2:#20242c; --elevated:#242934;
+    --ink:#ece7da; --muted:#a39d8e; --faint:#7c7668;
+    --line:#2c313b; --line-strong:#3a404c;
+    --gold:#d9ad5c; --gold-bright:#ecc171; --gold-wash:#2a2518;
+    --good:#5bbd86; --good-wash:#17271d; --bad:#e0805f; --bad-wash:#2a1a14;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    --shadow-lift:0 2px 6px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161b; --surface:#1b1e25; --surface-2:#20242c; --elevated:#242934;
+  --ink:#ece7da; --muted:#a39d8e; --faint:#7c7668;
+  --line:#2c313b; --line-strong:#3a404c;
+  --gold:#d9ad5c; --gold-bright:#ecc171; --gold-wash:#2a2518;
+  --good:#5bbd86; --good-wash:#17271d; --bad:#e0805f; --bad-wash:#2a1a14;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  --shadow-lift:0 2px 6px rgba(0,0,0,.4),0 20px 48px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased;margin:0;font-size:15px}
+h1,h2,h3{margin:0;text-wrap:balance}
+a{color:var(--gold)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{max-width:1180px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.crest{width:34px;height:34px;flex:none;border-radius:8px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--gold-bright),var(--gold));color:#1b1408;
+  font-family:"Cinzel";font-weight:700;font-size:18px;box-shadow:var(--shadow)}
+.brand b{font-family:"Cinzel";font-weight:600;font-size:16.5px;letter-spacing:.2px;display:block;line-height:1.1}
+.brand span{font-size:11.5px;color:var(--muted);letter-spacing:.3px}
+.spacer{flex:1}
+.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--muted);
+  border-radius:8px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer;display:flex;gap:7px;align-items:center}
+.ghost:hover{color:var(--ink);border-color:var(--gold)}
+
+.hero{padding:38px 0 26px}
+.eyebrow{font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:12px}
+.hero h1{font-family:"Cinzel";font-weight:700;font-size:clamp(27px,4.4vw,43px);line-height:1.08;letter-spacing:.3px}
+.hero p{max-width:64ch;color:var(--muted);margin:14px 0 0;font-size:15.5px}
+.hero .note{margin-top:14px;font-size:13px;color:var(--faint)}
+
+.grid{display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{position:sticky;top:72px}
+@media(max-width:900px){.panel{position:static}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card+.card{margin-top:18px}
+.card>h2{font-family:"Cinzel";font-weight:600;font-size:15px;letter-spacing:.3px;
+  padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+.card>h2 .n{width:21px;height:21px;flex:none;border-radius:6px;background:var(--gold-wash);color:var(--gold);
+  display:grid;place-items:center;font-family:"IBM Plex Mono";font-weight:600;font-size:12px}
+.body{padding:16px 18px}
+
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+label.lab{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
+label.lab small{font-weight:400;color:var(--faint);font-size:11.5px}
+.inp{position:relative;display:flex;align-items:center}
+.inp input,.inp select{width:100%;font:inherit;font-size:14.5px;color:var(--ink);background:var(--elevated);
+  border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px 11px;outline:none;transition:border-color .15s,box-shadow .15s}
+.inp.money input{padding-right:44px;font-family:"IBM Plex Mono";font-variant-numeric:tabular-nums}
+.inp .unit{position:absolute;right:11px;font-size:12px;color:var(--faint);pointer-events:none}
+.inp input:focus,.inp select:focus{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 20%,transparent)}
+input[type=range]{accent-color:var(--gold);height:6px;cursor:pointer}
+select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23938c7d' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px!important}
+
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:3px;gap:3px}
+.seg button{flex:1;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);background:transparent;border:0;
+  padding:7px 6px;border-radius:6px;cursor:pointer;transition:.12s}
+.seg button[aria-pressed="true"]{background:var(--elevated);color:var(--ink);box-shadow:var(--shadow)}
+.seg button:hover{color:var(--ink)}
+
+.check{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;font-size:13.5px}
+.check input{appearance:none;width:38px;height:22px;flex:none;background:var(--line-strong);border-radius:11px;position:relative;cursor:pointer;transition:background .15s}
+.check input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.check input:checked{background:var(--gold)}
+.check input:checked::after{transform:translateX(16px)}
+.check .hint{color:var(--faint);font-size:11.5px}
+
+.sub{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-strong)}
+.sub.on{display:block}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.kpis{grid-template-columns:1fr}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow)}
+.kpi .k{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-family:"IBM Plex Mono";font-weight:600;font-size:24px;margin-top:7px;letter-spacing:-.5px;line-height:1.05}
+.kpi .u{font-size:11.5px;color:var(--faint);margin-top:5px}
+.kpi.hero-kpi{background:linear-gradient(155deg,var(--gold-wash),var(--surface));border-color:var(--line-strong)}
+.kpi.hero-kpi .v{color:var(--gold)}
+.v.good{color:var(--good)} .v.bad{color:var(--bad)}
+
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);font-weight:600;
+  border-bottom:1px solid var(--line-strong);background:var(--surface-2)}
+thead th.grp{text-align:center;color:var(--gold);border-left:1px solid var(--line-strong)}
+tbody td{border-bottom:1px solid var(--line);font-family:"IBM Plex Mono";font-variant-numeric:tabular-nums}
+tbody td:first-child{font-family:"Figtree";font-weight:600}
+tbody td.gl{border-left:1px solid var(--line-strong)}
+tbody tr:hover{background:var(--surface-2)}
+.tierbadge{display:inline-flex;align-items:center;gap:7px}
+.tdot{width:8px;height:8px;border-radius:50%;flex:none}
+td.pos{color:var(--good)} td.neg{color:var(--bad)}
+.cap{text-align:left;padding:11px 18px;font-size:12px;color:var(--faint);border-top:1px solid var(--line);line-height:1.55}
+
+.daygrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:520px){.daygrid{grid-template-columns:1fr}}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:600}
+.stat .v{font-family:"IBM Plex Mono";font-weight:600;font-size:21px;margin-top:5px}
+.stat .u{font-size:11.5px;color:var(--faint);margin-top:3px}
+.miniline{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.7}
+.miniline b{font-family:"IBM Plex Mono";color:var(--ink)}
+
+.foot{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;line-height:1.7}
+.foot b{color:var(--muted)}
+details{margin-top:18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+details summary{padding:13px 18px;cursor:pointer;font-family:"Cinzel";font-weight:600;font-size:14px;list-style:none;display:flex;align-items:center;gap:9px}
+details summary::-webkit-details-marker{display:none}
+details summary .chev{margin-left:auto;transition:transform .2s;color:var(--faint)}
+details[open] summary .chev{transform:rotate(180deg)}
+details .body{border-top:1px solid var(--line)}
+details .body p{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+details .body p b{color:var(--ink)}
+.formula{font-family:"IBM Plex Mono";font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:8px;padding:9px 12px;color:var(--gold);margin:4px 0 14px;display:inline-block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="crest">R</div>
+      <div><b>Plot Raffinage</b><span>Albion Online · profit des stations</span></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="ghost" id="themeBtn" title="Changer de thème">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <span>Thème</span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Stations de raffinage · plots de ville</div>
+    <h1>Combien rapporte ta station&nbsp;?</h1>
+    <p>Tu loues un plot en ville et tu y poses une station de raffinage. Entre le prix de ta nourriture&nbsp;: l'outil calcule la <strong>taxe minimale</strong> rentable, ton <strong>profit par tier</strong> (client ou toi), le nombre de raffinages pour <strong>rembourser le plot</strong>, et le <strong>profit max par jour</strong> selon la crafting capacity.</p>
+    <p class="note">Les valeurs par défaut sont un exemple — remplace-les par tes vrais chiffres.</p>
+  </section>
+
+  <div class="grid">
+    <!-- ============ LEFT : CONTROLS ============ -->
+    <div class="panel">
+      <div class="card">
+        <h2><span class="n">1</span> Nourriture (food supply)</h2>
+        <div class="body">
+          <div class="field">
+            <label class="lab" for="foodSel">Nourriture utilisée</label>
+            <div class="inp"><select id="foodSel"></select></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="foodNut">Nutrition par unité <small>— valeur affichée en jeu</small></label>
+            <div class="inp money"><input id="foodNut" type="number" min="1" step="1" value="691"><span class="unit">nut</span></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="foodPrice">Prix d'achat de la nourriture</label>
+            <div class="inp money"><input id="foodPrice" type="number" min="0" step="1" value="900"><span class="unit">ar/u</span></div>
+          </div>
+          <div class="field">
+            <label class="check">
+              <input type="checkbox" id="preferred" checked>
+              <span>Nourriture préférée du bâtiment <span class="hint">→ nutrition ×2</span></span>
+            </label>
+          </div>
+          <div class="field" style="margin-top:16px">
+            <label class="lab">Qui remplit la station&nbsp;?</label>
+            <div class="seg" id="supplySeg">
+              <button data-v="self" aria-pressed="true">J'achète la food</button>
+              <button data-v="reward" aria-pressed="false">Je paie les donneurs</button>
+            </div>
+            <div class="sub" id="rewardSub">
+              <label class="lab" for="reward">Rémunération aux donneurs <small>— reward / 100 nut</small></label>
+              <div class="inp money"><input id="reward" type="number" min="0" step="1" value="150"><span class="unit">ar</span></div>
+              <div id="donorNote" class="check" style="margin-top:9px"><span class="hint"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">2</span> Taxes (usage fee)</h2>
+        <div class="body">
+          <div class="field">
+            <label class="lab" for="fee">Ma taxe affichée aux clients <small>— silver / 100 nut</small></label>
+            <div class="inp money"><input id="fee" type="number" min="0" step="1" value="400"><span class="unit">ar</span></div>
+          </div>
+          <button class="ghost" id="useMin" style="width:100%;justify-content:center;margin-bottom:14px">Utiliser la taxe minimale rentable</button>
+          <div class="field">
+            <label class="lab" for="feePublic">Taxe publique évitée <small>— scénario « moi qui raffine »</small></label>
+            <div class="inp money"><input id="feePublic" type="number" min="0" step="1" value="400"><span class="unit">ar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">3</span> Plot & capacité</h2>
+        <div class="body">
+          <div class="field">
+            <label class="lab" for="plotCost">Coût payé pour le plot <small>— achat / loyer total</small></label>
+            <div class="inp money"><input id="plotCost" type="number" min="0" step="1000" value="500000"><span class="unit">ar</span></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="capSel">Bâtiment (estimation capacité)</label>
+            <div class="inp"><select id="capSel"></select></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="capacity">Crafting capacity max <small>— lis-la sur ton bâtiment</small></label>
+            <div class="inp money"><input id="capacity" type="number" min="0" step="1000" value="4441077"><span class="unit">IV</span></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="util">Taux d'utilisation <small>— 100 % = régén/24h · 200 % = plein + régén</small></label>
+            <div style="display:flex;align-items:center;gap:11px">
+              <input id="util" type="range" min="0" max="200" step="5" value="100" style="flex:1">
+              <span class="mono" id="utilVal" style="min-width:50px;text-align:right;font-weight:600">100 %</span>
+            </div>
+          </div>
+          <div class="field">
+            <label class="lab" for="ownEnch">Enchantement des ressources</label>
+            <div class="inp"><select id="ownEnch">
+              <option value="0">Normal (.0)</option>
+              <option value="1">Uncommon (.1) ×2</option>
+              <option value="2">Rare (.2) ×4</option>
+              <option value="3">Exceptional (.3) ×8</option>
+              <option value="4">Pristine (.4) ×16</option>
+            </select></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RIGHT : RESULTS ============ -->
+    <div class="results">
+      <div class="kpis">
+        <div class="kpi hero-kpi">
+          <div class="k">Taxe minimale rentable</div>
+          <div class="v mono" id="kMin">—</div>
+          <div class="u">silver / 100 nut · seuil</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Profit / 100 nut</div>
+          <div class="v mono" id="kProfit">—</div>
+          <div class="u" id="kMargin">à la taxe affichée</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Profit / jour</div>
+          <div class="v mono" id="kDay">—</div>
+          <div class="u" id="kDayU">selon utilisation · clients</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Remboursement plot</div>
+          <div class="v mono" id="kDays">—</div>
+          <div class="u">jours à pleine capacité</div>
+        </div>
+      </div>
+
+      <!-- DAILY / CAPACITY -->
+      <div class="card">
+        <h2><span class="n">A</span> Profit max par jour (crafting capacity)</h2>
+        <div class="body">
+          <div class="daygrid">
+            <div class="stat">
+              <div class="k">Si des clients raffinent</div>
+              <div class="v mono" id="dayClient">—</div>
+              <div class="u" id="daysClient">— · remboursement plot</div>
+            </div>
+            <div class="stat">
+              <div class="k">Si c'est moi qui raffine (économie)</div>
+              <div class="v mono" id="dayMe">—</div>
+              <div class="u" id="daysMe">— · remboursement plot</div>
+            </div>
+          </div>
+          <div class="miniline" id="dayDetail"></div>
+        </div>
+      </div>
+
+      <!-- PER-TIER PROFIT + PAYBACK -->
+      <div class="card">
+        <h2><span class="n">B</span> Profit par tier raffiné & remboursement</h2>
+        <div class="scroll">
+          <table id="tierTbl">
+            <thead>
+              <tr>
+                <th rowspan="2">Tier</th><th rowspan="2">Nut. / raff.</th>
+                <th class="grp" colspan="2">Client raffine (mon profit)</th>
+                <th class="grp" colspan="2">Moi je raffine (mon gain)</th>
+              </tr>
+              <tr>
+                <th class="grp">Profit / raff.</th><th>Pour rembourser</th>
+                <th class="grp">Gain / raff.</th><th>Pour rembourser</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="cap">« Client » : je perçois la taxe et je paie la nourriture. « Moi » : je ne paie pas de taxe (station à moi), mon gain = taxe publique évitée − coût nourriture. « Pour rembourser » = nombre de raffinages de ce tier pour couvrir le coût du plot. Identique pour barres, planches, tissu, cuir et blocs.</div>
+      </div>
+
+      <details>
+        <summary>Formules & sources <svg class="chev" width="14" height="14" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></summary>
+        <div class="body">
+          <p><b>Nutrition consommée / raffinage</b> = Item Value × 0,1125.</p>
+          <div class="formula">IV(tier) = 2^tier − 2 → T2=2 · T3=6 · T4=14 · T5=30 · T6=62 · T7=126 · T8=254 · ×2 par niveau d'enchant</div>
+          <p><b>Taxe (usage fee)</b> réglée en <b>silver / 100 nutrition</b> (système Lands Awakened). Un joueur paie taxe × nutrition ÷ 100.</p>
+          <p><b>Coût food / 100 nut</b> = 100 × prix food ÷ (nutrition × bonus préférée). <b>Food préférée = ×2.</b></p>
+          <p><b>Profit / 100 nut</b> = taxe − coût food (ou − rémunération). La <b>taxe minimale</b> = ce coût.</p>
+          <p><b>Crafting capacity</b> : chaque raffinage consomme <b>0,5 × Item Value</b> de capacité, et le bâtiment régénère sa capacité <b>pleine en 24 h</b>.</p>
+          <div class="formula">nutrition / jour = 0,225 × capacité · profit max/jour = (nutrition/jour ÷ 100) × profit/100nut</div>
+          <p style="color:var(--faint);font-size:12.5px;margin-top:14px">Sources : Albion Online Wiki (Item Value, Food, Crafting Capacity, Resource return rate), Albion Online Forum (Usage Fee / Lands Awakened, capacity), Albion Codex. La nutrition d'une food et la crafting capacity exactes sont affichées en jeu — saisis-les pour un calcul exact.</p>
+        </div>
+      </details>
+
+      <div class="foot">
+        <b>Astuce.</b> Le profit max/jour ne dépend <b>pas</b> du tier (capacité et nutrition sont toutes deux proportionnelles à l'item value) — il dépend de la capacité du bâtiment et de ta marge par 100 nut. Le <b>nombre de raffinages</b> pour rembourser, lui, baisse fort en tier élevé (chaque raffinage consomme plus de nutrition = plus de taxe). Pour les donneurs de food, ta rémunération doit dépasser leur coût food/100 nut, sinon personne ne remplit.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const TIERS=[3,4,5,6,7,8];
+const IV_BASE={2:2,3:6,4:14,5:30,6:62,7:126,8:254};
+const ENCH_MULT=[1,2,4,8,16];
+const NUT_PER_IV=0.1125;
+const CAP_PER_IV=0.5;            // capacité consommée = 0.5 × item value
+const NUT_PER_CAP=NUT_PER_IV/CAP_PER_IV; // = 0.225 nutrition par unité de capacité/jour
+const TIER_COLOR={3:"#4e9a63",4:"#3f7fd0",5:"#b05bd0",6:"#d98a3a",7:"#d04a4a",8:"#d9b23a"};
+
+// Crafting capacity par tier de bâtiment (facteur ~2.3/tier, ancrage réel T8 = 4 441 077)
+const CAP_PRESETS=[
+  {l:"Station T3 (~69 k)",v:69000},
+  {l:"Station T4 (~159 k)",v:158700},
+  {l:"Station T5 (~365 k)",v:365000},
+  {l:"Station T6 (~840 k)",v:839500},
+  {l:"Station T7 (~1,93 M)",v:1930900},
+  {l:"Station T8 (4,44 M)",v:4441077},
+  {l:"Personnalisé",v:null}
+];
+// Nutrition ajoutée au bâtiment (base, avant ×2 food préférée)
+const FOODS=[
+  {l:"Soupe de carotte (T1)",n:62},
+  {l:"Salade de haricots (T2)",n:62},
+  {l:"Omelette de poulet (T3)",n:67},
+  {l:"Tourte au mouton (T3)",n:230},
+  {l:"Salade de chou (T4)",n:230},
+  {l:"Ragoût de gigot (T4)",n:77},
+  {l:"Omelette de canard (T5)",n:202},
+  {l:"Soupe de pommes de terre (T5)",n:691},
+  {l:"Salade de courge (T6)",n:691},
+  {l:"Sandwich de sanglier (T6)",n:202},
+  {l:"Omelette / Tourte (T7)",n:691},
+  {l:"Sandwich / Ragoût (T8)",n:691},
+  {l:"Personnalisé",n:null}
+];
+
+const ar=n=>{ if(!isFinite(n)) return "—";
+  const neg=n<0; n=Math.abs(n);
+  let s = n>=1e6 ? (n/1e6).toFixed(n>=1e7?1:2)+" M" : n>=1000 ? Math.round(n).toLocaleString("fr-FR") : (Math.round(n*100)/100).toLocaleString("fr-FR");
+  return (neg?"−":"")+s;
+};
+const arInt=n=>isFinite(n)?Math.round(n).toLocaleString("fr-FR"):"—";
+const num=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0;};
+const store=(k,v)=>{try{localStorage.setItem("pra_"+k,v)}catch(e){}};
+const loadK=k=>{try{return localStorage.getItem("pra_"+k)}catch(e){return null}};
+let supply = loadK("supply")||"self";
+// --- persistance de tous les champs ---
+const PERSIST=["foodSel","foodNut","foodPrice","preferred","reward","fee","feePublic","plotCost","capSel","capacity","util","ownEnch","resSel","rrrSel","rrrCustom","ownShop","aodpServer","aodpCity"];
+function saveAll(){PERSIST.forEach(id=>{const el=document.getElementById(id);if(!el)return;store("f_"+id,el.type==="checkbox"?(el.checked?"1":"0"):el.value);});}
+function restoreAll(){PERSIST.forEach(id=>{const v=loadK("f_"+id);if(v===null)return;const el=document.getElementById(id);if(!el)return;if(el.type==="checkbox")el.checked=(v==="1");else el.value=v;});}
+
+/* ---- build selects ---- */
+(function(){
+  const fs=$("#foodSel");
+  FOODS.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=f.l+(f.n?" — "+f.n+" nut":"");fs.appendChild(o);});
+  fs.value=FOODS.findIndex(f=>f.n===691);
+  fs.addEventListener("change",()=>{const f=FOODS[+fs.value];if(f.n)$("#foodNut").value=f.n;recompute();});
+
+  const cs=$("#capSel");
+  CAP_PRESETS.forEach((c,i)=>{const o=document.createElement("option");o.value=i;o.textContent=c.l;cs.appendChild(o);});
+  cs.value=CAP_PRESETS.findIndex(c=>c.v===4441077);
+  cs.addEventListener("change",()=>{const c=CAP_PRESETS[+cs.value];if(c.v)$("#capacity").value=c.v;recompute();});
+})();
+
+/* ---- theme ---- */
+(function(){
+  const saved=loadK("theme"); if(saved) document.documentElement.setAttribute("data-theme",saved);
+  $("#themeBtn").addEventListener("click",()=>{
+    const cur=document.documentElement.getAttribute("data-theme");
+    const sysDark=matchMedia("(prefers-color-scheme:dark)").matches;
+    const next=(cur?cur==="dark":sysDark)?"light":"dark";
+    document.documentElement.setAttribute("data-theme",next);store("theme",next);
+  });
+})();
+
+/* ---- supply toggle ---- */
+function setSupply(v){
+  supply=v;store("supply",v);
+  $$("#supplySeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));
+  $("#rewardSub").classList.toggle("on",v==="reward");
+  recompute();
+}
+$$("#supplySeg button").forEach(b=>b.addEventListener("click",()=>setSupply(b.dataset.v)));
+
+/* ---- core ---- */
+function ownerCost(){ // silver / 100 nut que la nutrition me coûte
+  const price=num("#foodPrice"), nut=num("#foodNut"), bonus=$("#preferred").checked?2:1;
+  const foodCost = nut>0 ? 100*price/(nut*bonus) : Infinity;
+  if(supply==="reward"){
+    const reward=num("#reward"), diff=reward-foodCost, el=$("#donorNote").querySelector(".hint");
+    if(isFinite(foodCost)) el.innerHTML = diff>=0
+      ? `Donneur : +${ar(diff)} ar / 100 nut de marge — intéressant ✓`
+      : `Donneur : ${ar(diff)} ar / 100 nut — personne ne remplira ✗`;
+    else el.textContent="";
+    return reward;
+  }
+  return foodCost;
+}
+const ivOf =(t,e)=>IV_BASE[t]*ENCH_MULT[e];
+const nutOf=(t,e)=>ivOf(t,e)*NUT_PER_IV;
+
+function recompute(){
+  const cost=ownerCost();
+  const fee=num("#fee"), feePub=num("#feePublic"), plot=num("#plotCost"), cap=num("#capacity"), e=+$("#ownEnch").value;
+  const profit100=fee-cost;          // profit proprio / 100 nut (clients)
+  const gain100=feePub-cost;         // gain / 100 nut (moi)
+
+  // KPIs
+  $("#kMin").textContent=ar(cost);
+  const kp=$("#kProfit");kp.textContent=ar(profit100);kp.className="v mono "+(profit100>0?"good":profit100<0?"bad":"");
+  const marginPct=(cost>0&&isFinite(cost))?(profit100/cost*100):NaN;
+  $("#kMargin").innerHTML=isFinite(marginPct)
+    ? `marge <b style="color:${profit100>=0?'var(--good)':'var(--bad)'}">${profit100>=0?'+':''}${marginPct.toFixed(0)} %</b> · taxe ${ar(fee)}`
+    : "à la taxe affichée";
+
+  // Daily throughput : nutrition/jour = 0.225 × capacité × taux d'utilisation
+  const util=num("#util"); $("#utilVal").textContent=util+" %";
+  const nutDay=NUT_PER_CAP*cap*(util/100);
+  const dayClient=nutDay/100*profit100, dayMe=nutDay/100*gain100;
+  const kd=$("#kDay");kd.textContent=ar(dayClient);kd.className="v mono "+(dayClient>0?"good":dayClient<0?"bad":"");
+  $("#kDayU").textContent="à "+util+" % d'usage · clients";
+  const daysC = dayClient>0 ? plot/dayClient : Infinity;
+  $("#kDays").textContent = isFinite(daysC)? (daysC<1?"<1":arInt(daysC)) : "∞";
+
+  // Daily card
+  const dc=$("#dayClient");dc.textContent=ar(dayClient)+" ar";dc.className="v mono "+(dayClient>0?"":"bad");
+  const dm=$("#dayMe");dm.textContent=ar(dayMe)+" ar";dm.className="v mono "+(dayMe>0?"":"bad");
+  $("#daysClient").innerHTML = dayClient>0 ? `≈ <b>${daysC<1?"<1":arInt(daysC)}</b> j pour rembourser le plot` : "taxe insuffisante — aucun profit";
+  const daysM = dayMe>0 ? plot/dayMe : Infinity;
+  $("#daysMe").innerHTML = dayMe>0 ? `≈ <b>${daysM<1?"<1":arInt(daysM)}</b> j pour rembourser le plot` : "taxe publique ≤ coût food";
+  const refDay=t=>nutDay/nutOf(t,e); // raffinages/jour à ce tier
+  const utilTxt = util===100?"régén. pleine/24 h" : util===200?"plein + régén. (max 1er jour)" : util+" % du débit";
+  $("#dayDetail").innerHTML=`Capacité <b>${arInt(cap)}</b> × <b>${util} %</b> → <b>${arInt(nutDay)}</b> nutrition raffinée / jour (${utilTxt}). `+
+    `Soit p. ex. <b>${arInt(refDay(4))}</b> raffinages T4${e?'.'+e:''}, `+
+    `<b>${arInt(refDay(6))}</b> T6${e?'.'+e:''} ou <b>${arInt(refDay(8))}</b> T8${e?'.'+e:''} par jour.`;
+
+  // Per-tier table
+  let rows="";
+  TIERS.forEach(t=>{
+    const nut=nutOf(t,e);
+    const pClient=profit100*nut/100, pMe=gain100*nut/100;
+    const repC = pClient>0 ? plot/pClient : Infinity;
+    const repM = pMe>0 ? plot/pMe : Infinity;
+    rows+=`<tr>
+      <td><span class="tierbadge"><span class="tdot" style="background:${TIER_COLOR[t]}"></span>T${t}${e?'.'+e:''}</span></td>
+      <td>${nut.toFixed(2)}</td>
+      <td class="gl ${pClient>0?'pos':pClient<0?'neg':''}">${ar(pClient)} ar</td>
+      <td>${isFinite(repC)?arInt(Math.ceil(repC)):'∞'}</td>
+      <td class="gl ${pMe>0?'pos':pMe<0?'neg':''}">${ar(pMe)} ar</td>
+      <td>${isFinite(repM)?arInt(Math.ceil(repM)):'∞'}</td>
+    </tr>`;
+  });
+  $("#tierTbl tbody").innerHTML=rows;
+}
+
+$("#useMin").addEventListener("click",()=>{const c=ownerCost();if(isFinite(c)){$("#fee").value=Math.ceil(c*1.25);recompute();}});
+["#foodNut","#foodPrice","#fee","#feePublic","#plotCost","#capacity","#reward","#util"].forEach(id=>$(id).addEventListener("input",recompute));
+["#preferred"].forEach(id=>$(id).addEventListener("change",recompute));
+["#ownEnch"].forEach(id=>$(id).addEventListener("change",recompute));
+// sauvegarde de tous les champs à chaque interaction
+document.addEventListener("input",saveAll);
+document.addEventListener("change",saveAll);
+
+restoreAll();
+if($("#rrrSel")) $("#rrrCustomWrap").style.display = $("#rrrSel").value==="custom"?"block":"none";
+setSupply(supply);
+recompute();
+</script>
